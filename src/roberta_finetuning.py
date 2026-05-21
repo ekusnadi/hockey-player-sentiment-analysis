@@ -57,7 +57,9 @@ class SentimentDataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        return {key: val[idx] for key, val in self.encodings.items()} | {"labels": self.labels[idx]}
+        item = {key: val[idx] for key, val in self.encodings.items()}
+        item["labels"] = self.labels[idx]
+        return item
 
 train_dataset = SentimentDataset(train_df["Comment"], train_df["label"])
 val_dataset = SentimentDataset(val_df["Comment"], val_df["label"])
