@@ -20,7 +20,7 @@ def parse_comments(items, post_id, headers, all_comments):
             # only save top-level comments
             if data["parent_id"].startswith("t3_"):
                 all_comments.append({
-                    "body": data["body"],
+                    "comment": data["body"],
                     "time_utc": datetime.fromtimestamp(data["created_utc"], tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 })
         elif item["kind"] == "more":
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     file_name = "comments.csv"
 
     with open(file_name, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["body", "time_utc"])
+        writer = csv.DictWriter(f, fieldnames=["comment", "time_utc"])
         writer.writeheader()
         writer.writerows(comments)
 
