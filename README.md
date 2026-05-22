@@ -28,8 +28,15 @@ pip install transformers torch scikit-learn pandas nltk textblob scipy matplotli
 
 ## Usage
 > **Note:** The fine-tuned model is not included in this repository due to file size. Run step 1 to generate it locally before running the pipeline.
+
+After cloning the repository, move into the project folder:
+```bash
+git clone https://github.com/ekusnadi/hockey-player-sentiment-analysis.git
+cd hockey-player-sentiment-analysis
+```
+
 1. Build fine-tuned RoBERTa model: `python src/roberta_finetuning.py`
-2. Run pipeline: `hockey_sentiment_pipeline.ipynb`
+2. Run the pipeline by opening and running: `hockey_sentiment_pipeline.ipynb`
 
 ## Results
 Evaluation outputs including confusion matrices and mislabeled comments are saved in `data/output/`.
