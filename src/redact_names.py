@@ -2,7 +2,37 @@ from pathlib import Path
 import pandas as pd
 import re
 from rapidfuzz import process, fuzz
-from sharks_aliases import sharks_aliases
+
+
+sharks_aliases = {
+    "A. Gaudette": ["adam", "gaudette", "gaud", "gauds"],
+    "A. Nedeljkovic": ["nedeljkovic", "ned"],
+    "A. Wennberg": ["alex", "wennberg", "wenny", "wennie"],
+    "B. Goodrow": ["barclay", "goodrow", "goody", "goodie"],
+    "C. Graf": ["collin", "graf", "graffer"],
+    "D. Orlov": ["dmitry", "orlov", "orly", "orlie", "scorlov"],
+    "I. Chernyshov": ["igor", "chernyshov", "cherny", "chernie"],
+    "J. Klingberg": ["john", "klingberg", "klinger", "johnberg", "kling", "klankberg", "dingleberg", "klongborg", "klingfuck"],
+    "K. Sherwood": ["kiefer", "sherwood", "kief"],
+    "L. Brossoit": ["laurent", "brossoit"],
+    "L. Cagnoni": ["luca", "cagnoni", "cags"],
+    "M. Celebrini": ["macklin", "celebrini", "mack", "celly", "cellie", "macky", "mackie"],
+    "M. Ferraro": ["mario", "ferraro", "mar"],
+    "M. Misa": ["mike", "michael", "misa", "mise", "mis"],
+    "N. Leddy": ["nick", "leddy", "leddie", "leds"],
+    "P. Regenda": ["pavol", "regenda", "reggy", "reggie"],
+    "P. Kurashev": ["philipp", "kurashev", "phil", "chevy", "chevie"],
+    "R. Reaves": ["ryan", "reaves", "reavo"],
+    "S. Dickinson": ["sam", "dickinson", "dicky", "dickie", "dick6"],
+    "S. Mukhamadullin": ["shakir", "mukhamadullin", "muk", "shak"],
+    "T. Dellandrea": ["ty", "dellandrea", "drea", "delly", "dellie"],
+    "T. Toffoli": ["tyler", "toffoli", "toff"],
+    "V. Desharnais": ["vincent", "desharnais", "vinny", "vinnie"],
+    "W. Smith": ["will", "smith", "smitty", "smittie"],
+    "W. Eklund": ["william", "eklund", "eky", "ekie", "ekky", "gecko"],
+    "Y. Askarov": ["yaroslav", "askarov", "asky", "askie"],
+    "Z. Ostapchuk": ["zack", "ostapchuk", "ostap", "chucky"],
+}
 
 SHORT_ALIAS_THRESHOLD = 4
 FUZZY_THRESHOLD = 85
