@@ -18,6 +18,7 @@ A Python NLP pipeline that scrapes Reddit hockey game threads, identifies player
   - `sharks_aliases.py` — player name and alias definitions
   - `roberta_finetuning.py` — fine-tunes RoBERTa on labeled comments
   - `model_testing.py` — evaluates VADER, TextBlob, and RoBERTa baselines
+- `Sentiment_Analysis_of_Hockey_Players.pdf` — written project report
 - `hockey_sentiment_pipeline.ipynb` — end-to-end sentiment analysis pipeline
 
 ## Requirements
