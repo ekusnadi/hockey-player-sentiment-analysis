@@ -3,13 +3,17 @@ import numpy as np
 import pandas as pd
 import torch
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer
 
 TRAINING_DATA_DIR = Path("data/training")
-OUTPUT_DIR = "./roberta-sharks-finetuned"
-Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+OUTPUT_DIR = Path("data/output")
+MODEL_DIR = "./models/roberta-sharks-finetuned"
+CHECKPOINT_DIR = "./models/roberta-sharks-finetuned-checkpoints"
+Path(MODEL_DIR).mkdir(parents=True, exist_ok=True)
+Path(CHECKPOINT_DIR).mkdir(parents=True, exist_ok=True)
 
 # Config 
 MODEL_NAME = "cardiffnlp/twitter-roberta-base-sentiment-latest"
@@ -78,9 +82,30 @@ def compute_metrics(eval_pred):
     preds = np.argmax(logits, axis=-1)
     return {"accuracy": accuracy_score(labels, preds)}
 
+def save_mislabeled_comments(df, model):
+    mislabeled = df[df['Sentiment'] != df[f'predicted_{model}']]
+    print(f"\nNumber of mislabeled comments ({model}): {len(mislabeled)}/{len(df)}")
+    if len(mislabeled) > 0:
+        output_file = OUTPUT_DIR / f"mislabeled_comments_{model}.csv"
+        mislabeled[['Comment', 'Sentiment', f'predicted_{model}']].to_csv(output_file, index=True)
+        print(f"Saved {len(mislabeled)} mislabeled comments to {output_file.name}")
+    else:
+        print("No mislabeled comments.")
+
+def save_confusion_matrix(y_true, y_pred, model_name):
+    cm = confusion_matrix(y_true, y_pred, labels=['negative', 'neutral', 'positive'])
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['negative', 'neutral', 'positive'])
+    disp.plot(cmap='Blues')
+    plt.title(f"Confusion Matrix ({model_name})")
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / f"confusion_matrix_{model_name}.png")
+    plt.close()
+    print(f"Saved confusion matrix to confusion_matrix_{model_name}.png")
+
+
 # Train model
 args = TrainingArguments(
-    output_dir=OUTPUT_DIR,
+    output_dir=CHECKPOINT_DIR,
     num_train_epochs=EPOCHS,
     per_device_train_batch_size=BATCH_SIZE,
     per_device_eval_batch_size=BATCH_SIZE,
@@ -109,7 +134,11 @@ preds = np.argmax(trainer.predict(val_dataset).predictions, axis=-1)
 print("\nVal Accuracy:", accuracy_score(val_df["label"], preds))
 print(classification_report(val_df["label"], preds, target_names=["negative", "neutral", "positive"]))
 
+val_df['predicted_roberta_finetuned'] = [ID2LABEL[p] for p in preds]
+save_mislabeled_comments(val_df, 'roberta_finetuned')
+save_confusion_matrix(val_df["Sentiment"], [ID2LABEL[p] for p in preds], 'roberta_finetuned')
+
 # Save model
-model.save_pretrained(OUTPUT_DIR)
-tokenizer.save_pretrained(OUTPUT_DIR)
-print(f"\nModel saved to {OUTPUT_DIR}")
+model.save_pretrained(MODEL_DIR)
+tokenizer.save_pretrained(MODEL_DIR)
+print(f"\nModel saved to {MODEL_DIR}")

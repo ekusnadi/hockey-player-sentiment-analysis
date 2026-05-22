@@ -10,7 +10,7 @@ sharks_aliases = {
     "C. Graf": ["collin", "graf", "graffer"],
     "D. Orlov": ["dmitry", "orlov", "orly", "orlie", "scorlov"],
     "I. Chernyshov": ["igor", "chernyshov", "cherny", "chernie"],
-    "J. Klingberg": ["klingberg", "klinger", "johnberg", "kling", "klankberg", "dingleberg", "klongborg", "klingfuck"],
+    "J. Klingberg": ["john", "klingberg", "klinger", "johnberg", "kling", "klankberg", "dingleberg", "klongborg", "klingfuck"],
     "K. Sherwood": ["kiefer", "sherwood", "kief"],
     "L. Brossoit": ["laurent", "brossoit"],
     "L. Cagnoni": ["luca", "cagnoni", "cags"],

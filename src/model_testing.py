@@ -1,8 +1,10 @@
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from nltk.sentiment import SentimentIntensityAnalyzer
 import nltk
-from sklearn.metrics import accuracy_score, classification_report
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
 from textblob import TextBlob
 
 from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer, AutoConfig
@@ -12,14 +14,18 @@ from scipy.special import softmax
 # Download VADER lexicon if not already downloaded
 # nltk.download('vader_lexicon')
 
-# Load the CSV dataset
-df = pd.read_csv('./labeled_player_comments.csv', encoding='latin-1')
+OUTPUT_DIR = Path("data/output")
+TRAINING_DATA_DIR = Path("data/training")
+input_file = TRAINING_DATA_DIR / "labeled_player_comments.csv"
 
-print("number of positive comments:", len(df[df['Sentiment'] == 'positive']))
-print("number of neutral comments:", len(df[df['Sentiment'] == 'neutral']))
-print("number of negative comments:", len(df[df['Sentiment'] == 'negative']))
+if not input_file.exists():
+    raise FileNotFoundError(f"Could not find {input_file}")
+
+# Load the CSV dataset
+df = pd.read_csv(input_file, encoding='latin-1')
 
 # Initialize VADER sentiment analyzer
+sia_base = SentimentIntensityAnalyzer()
 sia = SentimentIntensityAnalyzer()
 
 sia.lexicon.update({
@@ -49,8 +55,8 @@ sia.lexicon.update({
 })
 
 # Function to get sentiment label from VADER
-def get_sentiment(text):
-    scores = sia.polarity_scores(str(text))
+def get_sentiment(text, model):
+    scores = model.polarity_scores(str(text))
     compound = scores['compound']
     if compound >= 0.05:
         return 'positive'
@@ -69,39 +75,63 @@ def get_sentiment_textblob(text):
     else:
         return 'neutral'
 
+def save_mislabeled_comments(df, model):
+    mislabeled = df[df['Sentiment'] != df[f'predicted_{model}']]
+    print(f"\nNumber of mislabeled comments ({model}): {len(mislabeled)}/{len(df)}")
+    if len(mislabeled) > 0:
+        output_file = OUTPUT_DIR / f"mislabeled_comments_{model}.csv"
+        mislabeled[['Comment', 'Sentiment', f'predicted_{model}']].to_csv(output_file, index=True)
+        print(f"Saved {len(mislabeled)} mislabeled comments to {output_file.name}")
+    else:
+        print("No mislabeled comments.")
+
+def save_confusion_matrix(y_true, y_pred, model_name):
+    cm = confusion_matrix(y_true, y_pred, labels=['negative', 'neutral', 'positive'])
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['negative', 'neutral', 'positive'])
+    disp.plot(cmap='Blues')
+    plt.title(f"Confusion Matrix ({model_name})")
+    plt.tight_layout()
+    plt.savefig(OUTPUT_DIR / f"confusion_matrix_{model_name}.png")
+    plt.close()
+    print(f"Saved confusion matrix to confusion_matrix_{model_name}.png")
+
+
 # Apply VADER to each text entry
-df['predicted_vader'] = df['Comment'].apply(get_sentiment)
+df['predicted_vader_base'] = df['Comment'].apply(lambda x: get_sentiment(x, sia_base))
+df['predicted_vader_aug'] = df['Comment'].apply(lambda x: get_sentiment(x, sia))
 
 # Apply TextBlob to each text entry
 df['predicted_textblob'] = df['Comment'].apply(get_sentiment_textblob)
 
 # Calculate accuracy
-accuracy = accuracy_score(df['Sentiment'], df['predicted_vader'])
+accuracy_base = accuracy_score(df['Sentiment'], df['predicted_vader_base'])
+accuracy_aug = accuracy_score(df['Sentiment'], df['predicted_vader_aug'])
 accuracy_tb = accuracy_score(df['Sentiment'], df['predicted_textblob'])
 
 # Generate classification report
-report_vader = classification_report(df['Sentiment'], df['predicted_vader'], target_names=['negative', 'neutral', 'positive'])
+report_base = classification_report(df['Sentiment'], df['predicted_vader_base'], target_names=['negative', 'neutral', 'positive'])
+report_aug = classification_report(df['Sentiment'], df['predicted_vader_aug'], target_names=['negative', 'neutral', 'positive'])
 report_textblob = classification_report(df['Sentiment'], df['predicted_textblob'], target_names=['negative', 'neutral', 'positive'])
 
 # Print results
-print(f"VADER Accuracy: {accuracy:.4f}")
+print(f"VADER Accuracy: {accuracy_base:.4f}")
+print(f"VADER Accuracy (Augmented): {accuracy_aug:.4f}")
 print(f"TextBlob Accuracy: {accuracy_tb:.4f}")
 print("\nClassification Report (VADER):")
-print(report_vader)
+print(report_base)
+print("\nClassification Report (VADER Augmented):")
+print(report_aug)
 print("\nClassification Report (TextBlob):")
 print(report_textblob)
 
-def show_mislabeled_comments(df, model):
-    mislabeled = df[df['Sentiment'] != df[f'predicted_{model}']]
-    print(f"\nNumber of mislabeled comments: {len(mislabeled)}/{len(df)}")
-    if len(mislabeled) > 0:
-        print("\nMislabeled Comments:")
-        for idx, row in mislabeled.iterrows():
-            print(f"Index {idx}: Text: '{row['Comment']}' | True: {row['Sentiment']} | Predicted: {row[f'predicted_{model}']}")
-    else:
-        print("No mislabeled comments.")
+# Save results
+save_mislabeled_comments(df, 'vader_base')
+save_mislabeled_comments(df, 'vader_aug')
+save_mislabeled_comments(df, 'textblob')
 
-#show_mislabeled_comments(df, 'vader')
+save_confusion_matrix(df['Sentiment'], df['predicted_vader_base'], 'vader_base')
+save_confusion_matrix(df['Sentiment'], df['predicted_vader_aug'], 'vader_aug')
+save_confusion_matrix(df['Sentiment'], df['predicted_textblob'], 'textblob')
 
 # Initialize RoBERTa model and tokenizer
 MODEL = f"cardiffnlp/twitter-roberta-base-sentiment-latest"
@@ -127,4 +157,5 @@ print(f"\nRoBERTa Accuracy: {accuracy_roberta:.4f}")
 print("\nClassification Report (RoBERTa):")
 print(report_roberta)
 
-show_mislabeled_comments(df, 'roberta')
+save_mislabeled_comments(df, 'roberta')
+save_confusion_matrix(df['Sentiment'], df['predicted_roberta'], 'roberta')
