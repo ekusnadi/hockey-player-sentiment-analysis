@@ -23,7 +23,7 @@ A Python NLP pipeline that scrapes Reddit hockey game threads, identifies player
 
 ## Requirements
 ```bash
-pip install transformers torch scikit-learn pandas nltk textblob scipy matplotlib adjustText nhlpy
+pip install transformers torch scikit-learn pandas nltk textblob scipy matplotlib adjustText nhlpy rapidfuzz
 ```
 
 ## Usage
