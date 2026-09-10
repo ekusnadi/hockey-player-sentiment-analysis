@@ -1,10 +1,5 @@
 # Hockey Player Sentiment Analysis
 
-## Author & Submission Info
-- **Author:** Ethan Kusnadi  
-- **Date of Submission:**  May 22, 2026
-- **Oral Presentation Recording:** https://drive.google.com/file/d/1iB8le56cZkfxx2Xr69V9zvB3MYQ9Ok0u/view?usp=sharing
-
 ## Overview
 A Python NLP pipeline that scrapes Reddit hockey game threads, identifies player mentions, classifies sentiment, and generates per-player sentiment scores as a complement to the box score.
 
